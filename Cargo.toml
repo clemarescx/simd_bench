@@ -1,0 +1,7 @@
+[package]
+name = "simding_benches"
+version = "0.1.0"
+authors = ["Clement Marescaux <marcle15@student.westerdals.no>"]
+
+[dependencies]
+rayon = "*"
