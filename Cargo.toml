@@ -5,3 +5,10 @@ authors = ["Clement Marescaux <marcle15@student.westerdals.no>"]
 
 [dependencies]
 rayon = "*"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "simd_benches"
+harness = false
