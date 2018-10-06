@@ -5,6 +5,7 @@ authors = ["Clement Marescaux <marcle15@student.westerdals.no>"]
 
 [dependencies]
 rayon = "*"
+rand = "*"
 
 [dev-dependencies]
 criterion = "0.2"
