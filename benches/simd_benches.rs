@@ -81,6 +81,46 @@ pub fn add_two_else_add_three_par_return_inner(v: &[i32]) -> Vec<i32> {
         .collect::<Vec<i32>>()
 }
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+pub unsafe fn add_two_with_intrinsics_auto(v: &mut [i32]) {
+    add_two_iter_mut_outparam(v)
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+pub unsafe fn add_two_with_intrinsics_auto_par(v: &mut [i32]) {
+    add_two_par_iter_mut_outparam(v)
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+#[target_feature(enable = "avx2")]
+pub unsafe fn add_two_with_intrinsics_implicit(v: &mut [i32]) {
+    use std::arch::x86_64::*;
+    assert_eq!(v.len() % 8, 0);
+    let p_count = v.len() / 8;
+    for i in 0..p_count {
+        let offset = i * 8;
+        let p = _mm256_set_epi32(
+            v[offset],
+            v[offset + 1],
+            v[offset + 2],
+            v[offset + 3],
+            v[offset + 4],
+            v[offset + 5],
+            v[offset + 6],
+            v[offset + 7],
+        );
+        let inc = _mm256_set1_epi32(2);
+        let res = _mm256_add_epi32(p, inc);
+        _mm256_maskstore_epi32(
+            v.as_mut_ptr().offset(offset as isize) as *mut _,
+            _mm256_set1_epi32(0xffff),
+            res,
+        );
+    }
+}
+
 // benchmarks
 
 pub fn simd(c: &mut Criterion) {
@@ -117,15 +157,42 @@ pub fn simd(c: &mut Criterion) {
             b.iter(|| add_two_else_add_three_par_return(v))
         });
 
+    let simd_with_avx2_intrinsics_auto =
+        Fun::new("With avx2 intrinsics - auto", |b, v: &Vec<i32>| {
+            if is_x86_feature_detected!("avx2") {
+                let mut v = v.clone();
+                b.iter(|| return unsafe { add_two_with_intrinsics_auto(&mut v) });
+            }
+        });
+
+    let simd_with_avx2_intrinsics_auto_par =
+        Fun::new("With avx2 intrinsics - auto parallel", |b, v: &Vec<i32>| {
+            if is_x86_feature_detected!("avx2") {
+                let mut v = v.clone();
+                b.iter(|| return unsafe { add_two_with_intrinsics_auto_par(&mut v) });
+            }
+        });
+
+    let simd_with_avx2_intrinsics_explicit =
+        Fun::new("With avx2 intrinsics - implicit", |b, v: &Vec<i32>| {
+            if is_x86_feature_detected!("avx2") {
+                let mut v = v.clone();
+                b.iter(|| return unsafe { add_two_with_intrinsics_implicit(&mut v) });
+            }
+        });
+
     let functions = vec![
-        simd_inline,
-        simd_iter,
-        simd_iter_mut,
-        simd_par_iter_mut,
-        simd_par_iter,
-        simd_par_intoiter,
-        simd_branching_no_sorting,
-        simd_branching_no_sorting_par,
+        // simd_inline,
+        // simd_iter,
+        // simd_iter_mut,
+        // simd_par_iter_mut,
+        // simd_par_iter,
+        // simd_par_intoiter,
+        // simd_branching_no_sorting,
+        // simd_branching_no_sorting_par,
+        simd_with_avx2_intrinsics_auto,
+        simd_with_avx2_intrinsics_auto_par,
+        simd_with_avx2_intrinsics_explicit,
     ];
 
     // let test_vector: Vec<i32> = vec![1; 100_000];
@@ -133,7 +200,7 @@ pub fn simd(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
     let test_vector: Vec<i32> = rng
         .sample_iter(&Standard)
-        .take(100_000)
+        .take(1 << 16)
         .map(|x: i32| (x % 10) + 1)
         .collect();
 
