@@ -169,7 +169,7 @@ pub fn simd(c: &mut Criterion) {
         Fun::new("With avx2 intrinsics - auto parallel", |b, v: &Vec<i32>| {
             if is_x86_feature_detected!("avx2") {
                 let mut v = v.clone();
-                b.iter(|| return unsafe { add_two_with_intrinsics_auto_par(&mut v) });
+                b.iter(|| unsafe { add_two_with_intrinsics_auto_par(&mut v) });
             }
         });
 
@@ -177,19 +177,19 @@ pub fn simd(c: &mut Criterion) {
         Fun::new("With avx2 intrinsics - implicit", |b, v: &Vec<i32>| {
             if is_x86_feature_detected!("avx2") {
                 let mut v = v.clone();
-                b.iter(|| return unsafe { add_two_with_intrinsics_implicit(&mut v) });
+                b.iter(|| unsafe { add_two_with_intrinsics_implicit(&mut v) });
             }
         });
 
     let functions = vec![
-        // simd_inline,
-        // simd_iter,
-        // simd_iter_mut,
-        // simd_par_iter_mut,
-        // simd_par_iter,
-        // simd_par_intoiter,
-        // simd_branching_no_sorting,
-        // simd_branching_no_sorting_par,
+        simd_inline,
+        simd_iter,
+        simd_iter_mut,
+        simd_par_iter_mut,
+        simd_par_iter,
+        simd_par_intoiter,
+        simd_branching_no_sorting,
+        simd_branching_no_sorting_par,
         simd_with_avx2_intrinsics_auto,
         simd_with_avx2_intrinsics_auto_par,
         simd_with_avx2_intrinsics_explicit,
