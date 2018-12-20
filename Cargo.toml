@@ -1,11 +1,13 @@
 [package]
-name = "simding_benches"
+name = "simd_bench"
 version = "0.1.0"
 authors = ["Clement Marescaux <marcle15@student.westerdals.no>"]
+edition = "2018"
 
 [dependencies]
 rayon = "*"
 rand = "*"
+nalgebra = "*"
 
 [dev-dependencies]
 criterion = "0.2"
